@@ -6,7 +6,7 @@
 #include "fileutils.h"
 
 #define LOG_LEVEL   DEBUG
-#include "seethe.h"
+#include "verbose_seethe.h"
 
 int fileutils_get_filesize(const char *filename, long* result_filesize)
 {
@@ -15,23 +15,23 @@ int fileutils_get_filesize(const char *filename, long* result_filesize)
     long filesize;
     int result;
 
-    debug("fileutils_get_filesize: %s", filename);
+    verbose_debug("fileutils_get_filesize: %s", filename);
 
     if (filename == NULL)
     {
-        error("fileutils_get_filesize: filename is NULL");
+        verbose_error("fileutils_get_filesize: filename is NULL");
         result = -EINVAL;
         goto cleanup;
     }
     if ((fp = fopen(filename,"rb")) == NULL) // flawfinder: ignore
     {
-        error("fileutils_get_filesize: fopen failed");
+        verbose_error("fileutils_get_filesize: fopen failed");
         result = -EIO;
         goto cleanup;
     }
     if (fseek(fp, 0, SEEK_END) != 0)
     {
-        error("fileutils_get_filesize: fseek failed");
+        verbose_error("fileutils_get_filesize: fseek failed");
         result = -EIO;
         goto cleanup;
     }
@@ -39,7 +39,7 @@ int fileutils_get_filesize(const char *filename, long* result_filesize)
 
     if (fclose(fp) != 0)
     {
-        error("fileutils_get_filesize: fclose failed");
+        verbose_error("fileutils_get_filesize: fclose failed");
         result = -EIO;
         goto cleanup;
     }
@@ -54,10 +54,10 @@ cleanup:
         fp = NULL;
     }
 
-    debug("fileutils_get_filesize: filesize: %ld", filesize);
+    verbose_debug("fileutils_get_filesize: filesize: %ld", filesize);
     *result_filesize = filesize;
 
-    debug("fileutils_get_filesize: result: %d", result);
+    verbose_debug("fileutils_get_filesize: result: %d", result);
     return result;
 }
 
@@ -71,19 +71,19 @@ int fileutils_read_into_buffer(const char *filename, void** result_buffer, size_
 
     if (filename == NULL)
     {
-        error("fileutils_read_into_buffer: filename is NULL");
+        verbose_error("fileutils_read_into_buffer: filename is NULL");
         result = -EINVAL;
         goto cleanup;
     }
     if (result_buffer == NULL)
     {
-        error("fileutils_read_into_buffer: result_buffer is NULL");
+        verbose_error("fileutils_read_into_buffer: result_buffer is NULL");
         result = -EINVAL;
         goto cleanup;
     }
     if (maxlen == 0)
     {
-        error("fileutils_read_into_buffer: maxlen is 0");
+        verbose_error("fileutils_read_into_buffer: maxlen is 0");
         result = -EINVAL;
         goto cleanup;
     }
@@ -91,15 +91,15 @@ int fileutils_read_into_buffer(const char *filename, void** result_buffer, size_
     buffer = *result_buffer;
     if (fileutils_get_filesize(filename,&filesize) != 0)
     {
-        error("fileutils_read_into_buffer: fileutils_get_filesize failed");
+        verbose_error("fileutils_read_into_buffer: fileutils_get_filesize failed");
         result = -EIO;
         goto cleanup;
     }
-    debug("fileutils_read_into_buffer: filesize: %ld", filesize);
+    verbose_debug("fileutils_read_into_buffer: filesize: %ld", filesize);
 
     if ((size_t)filesize > maxlen)
     {
-        error("fileutils_read_into_buffer: filesize too large");
+        verbose_error("fileutils_read_into_buffer: filesize too large");
         result = -EFBIG;
         goto cleanup;
     }
@@ -107,34 +107,34 @@ int fileutils_read_into_buffer(const char *filename, void** result_buffer, size_
     buffer = malloc((size_t)filesize);
     if (buffer == NULL)
     {
-        error("fileutils_read_into_buffer: malloc failed");
+        verbose_error("fileutils_read_into_buffer: malloc failed");
         result = -ENOMEM;
         goto cleanup;
     }
 
     if ((fp = fopen(filename,"rb")) == NULL) // flawfinder: ignore
     {
-        error("fileutils_read_into_buffer: fopen failed");
+        verbose_error("fileutils_read_into_buffer: fopen failed");
         result = -EIO;
         goto cleanup;
     }
     if (fseek(fp, 0, SEEK_SET) != 0)
     {
-        error("fileutils_read_into_buffer: fseek failed");
+        verbose_error("fileutils_read_into_buffer: fseek failed");
         result = -EIO;
         goto cleanup;
     }
     numread = fread(buffer,sizeof(uint8_t),filesize,fp);
     if (numread != (size_t)filesize)
     {
-        error("fileutils_read_into_buffer: fread failed read: %zu vs filesize: %ld", numread, filesize);
+        verbose_error("fileutils_read_into_buffer: fread failed read: %zu vs filesize: %ld", numread, filesize);
         result = -EIO;
         goto cleanup;
     }
 
     if (fclose(fp) != 0)
     {
-        error("fileutils_read_into_buffer: fclose failed");
+        verbose_error("fileutils_read_into_buffer: fclose failed");
         result = -EIO;
         goto cleanup;
     }

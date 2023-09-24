@@ -9,7 +9,7 @@
 #include "fileutils.h"
 
 #define LOG_LEVEL   DEBUG
-#include "seethe.h"
+#include "verbose_seethe.h"
 
 static int write_auto_generated_header(FILE* fp, const config_st* cfg, const char* filename)
 {
@@ -70,7 +70,7 @@ int bin2c_write_buffer_c_file(const uint8_t* buffer, size_t buffer_size, const c
 
     if ((fpout = fopen(cfg->c_filename,"wt")) == NULL) // flawfinder: ignore
     {
-        error("Cannot open output file for writing: %s",cfg->c_filename);
+        verbose_error("Cannot open output file for writing: %s",cfg->c_filename);
         errcode = -EIO;
         goto cleanup;
     }
@@ -162,7 +162,7 @@ int bin2c_write_buffer_h_file(const uint8_t* buffer, size_t buffer_size, const c
 
     if ((fpout = fopen(cfg->h_filename,"wt")) == NULL) // flawfinder: ignore
     {
-        error("Cannot open output file for writing: %s",cfg->h_filename);
+        verbose_error("Cannot open output file for writing: %s",cfg->h_filename);
         errcode = -EIO;
         goto cleanup;
     }
@@ -263,28 +263,28 @@ int bin2c_write(const config_st* cfg)
 
     if (fileutils_get_filesize(cfg->input_filename,&filesize) != 0)
     {
-        error("Cannot get file size of %s",cfg->input_filename);
+        verbose_error("Cannot get file size of %s",cfg->input_filename);
         errcode = -EIO;
         goto cleanup;
     }
     input_buffer = (uint8_t *)malloc((size_t)filesize);
     if (input_buffer == NULL)
     {
-        error("Cannot allocate memory for input buffer");
+        verbose_error("Cannot allocate memory for input buffer");
         errcode = -ENOMEM;
         goto cleanup;
     }
 
     if ((fpin = fopen(cfg->input_filename,"rb")) == NULL) // flawfinder: ignore
     {
-        error("Cannot open file %s",cfg->input_filename);
+        verbose_error("Cannot open file %s",cfg->input_filename);
         return -EIO;
     }
 
     numread = fread(input_buffer,sizeof(uint8_t),filesize,fpin);
     if (numread != (size_t)filesize)
     {
-        error("Cannot seek on file %s",cfg->input_filename);
+        verbose_error("Cannot seek on file %s",cfg->input_filename);
         errcode = -EIO;
         goto cleanup;
     }

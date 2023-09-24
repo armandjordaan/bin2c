@@ -1,12 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "argparse.h"
 #include "config.h"
 #include "bin2c.h"
 
 #define LOG_LEVEL   DEBUG
-#include "seethe.h"
+#include "verbose_seethe.h"
+
+#define VERSION "0.1.0"
+
+bool verbose_enabled_flag;
 
 static const char *const usage[] = {
     "bin2c [options] [[--] args]",
@@ -17,6 +22,7 @@ static const char *const usage[] = {
 int main(int argc, const char **argv)
 {
     char *config_file = NULL;
+    bool show_version = false;
     config_st cfg;
 
     int result = 0;
@@ -26,6 +32,8 @@ int main(int argc, const char **argv)
         OPT_HELP(),
         OPT_GROUP("Basic options"),
         OPT_STRING('c', "config", &config_file, "config filename"),
+        OPT_BOOLEAN('r', "version", &show_version, "show version"),
+        OPT_BOOLEAN('v', "verbose", &verbose_enabled_flag, "verbose mode"),
         OPT_END()
     };
 
@@ -34,23 +42,33 @@ int main(int argc, const char **argv)
     argparse_describe(
         &argparse,
         "\nProgram to create a c source file from a binary image.",
-        "\n(All file parameters are required).");
+        "\n(Specify '-h' for help).");
     argc = argparse_parse(&argparse, argc, argv);
 
-
-    info("Config filename: %s",config_file);
+    if (show_version)
+    {
+        printf("bin2c version: %s\n", VERSION);
+        result = 0;
+        goto done;
+    }
+    if (config_file == NULL)
+    {
+        config_file = "default.json";
+        verbose_info("Using default config file: %s",config_file);
+    }
+    verbose_info("Config filename: %s",config_file);
 
     result = config_read(config_file, &cfg);
     if (result != 0)
     {
-        error("Error reading config file: %s",config_file);
+        verbose_error("Error reading config file: %s",config_file);
         goto done;
     }
 
     result = bin2c_write(&cfg);
     if (result != 0)
     {
-        error("Error writing output file(s)");
+        verbose_error("Error writing output file(s)");
         goto done;
     }
 
@@ -61,7 +79,7 @@ int main(int argc, const char **argv)
         goto done;
     }
 
-    info("Done!");
+    verbose_info("Done!");
 
 done:
     return result;
